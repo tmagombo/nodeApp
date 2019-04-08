@@ -3,7 +3,10 @@ require("dotenv").config();
 var moment = require('moment');
 moment().format();
 
+var fs = require("fs");
+
 var keys = require("./keys.js");
+var cmd=require('node-cmd');
 
 var command = process.argv[2];
 var command2 = process.argv[3];
@@ -14,7 +17,8 @@ var spotify = new Spotify(keys.spotify);
 
 var axios = require("axios");
 
-
+var spotifyArr = [];
+var text = [];
 
 function concertThis(){
   axios.get("https://rest.bandsintown.com/artists/" + command2 + "/events?app_id=codingbootcamp")
@@ -29,18 +33,50 @@ function concertThis(){
 };
 
 function spotifyThisSong(){
-  axios.get("https://accounts.spotify.com/authorize/client_id=bbffe8dab87e4604961299d51bbe98bc"+
-  "&response_type=token&redirect_uri=https://mysite.com/callback/")
-  .then(function(response) {
-    console.log(response);
-  });
+  spotify.search({
+    type: 'track', limit: '5', query: command2}, function(err, data){
+    if(err){
+      return console.log("error")
+    }
+    for(var i = 0; i<5; i++)
+    {
+          if(data.tracks.items[i].popularity>40){
+            spotifyArr.push(data.tracks.items[i]);
+          };
+        };
+        console.log(spotifyArr[0].artists[0].name);
+        console.log(spotifyArr[0].name);
+        console.log(spotifyArr[0].preview_url);
+        console.log(spotifyArr[0].album.name);
+        if(spotifyArr[1]!==undefined){
+        console.log("\n---------------------------------\n");
+        console.log(spotifyArr[1].artists[1].name);
+        console.log(spotifyArr[1].name);
+        console.log(spotifyArr[1].preview_url);
+        console.log(spotifyArr[1].album.name);
+        };
+
+    });
 };
 
 function whatItSays(){
-  
-}
+  fs.readFile("random.txt","utf-8", function(error, data){
+    if(error){
+        return console.log(error);
+    }
+    text.push(data.split(","));
+    console.log(text);
+    movieThisSong();
+  })};
 
 function movieThisSong(){
+  if(command2!==undefined&&text.arraylength===0){
+    command2 = "Mr.Nobody";
+  }
+  else{
+    command2 = text[1];
+    console.log("hi")
+  };
     axios.get("http://www.omdbapi.com/?apikey=trilogy&t="+command2)
     .then(function(response){
       console.log(response.data.Title);
@@ -65,4 +101,8 @@ if(command==="spotify-this"){
 
 if(command==="movie-this"){
   movieThisSong();
+};
+
+if(command==="do-what-it-says"){
+  whatItSays();
 };
